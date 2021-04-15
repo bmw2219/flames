@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html style="padding:0;margin:0;">
+	<body style="padding:0;margin:0;overflow: hidden;">
+		<canvas id="screen"></canvas>
+		<script>
+			canvascolor = "rgba(19, 23, 26, 1)";
+			var canvas = document.getElementById('screen');
+			var ctx = canvas.getContext('2d');
+			var sugars = [];
+			var scrollnumber = 1;
+			var click = false
+			var mouseX = 0;
+			var mouseY = 0;
+			var mousemode = 0;
+			var pause = false;
+			const maxsugars = 20000;
+			var size = 6; //sugar size
+			var bottomspace = size;
+			var sugarborders = 0; //0 to 0.5
+			var grainsizes = size;
+			var bottomsquares = bottomspace/size;
+			canvasResize();
+
+
+			var arry = Array(Math.round(canvas.width/size-1));
+			for(var i=0; i<Math.round(canvas.width/size-1); ++i) {
+			  arry[i] = Array(Math.round(canvas.height/size-bottomsquares));
+			  for(var j=0; j<Math.round(canvas.height/size-bottomsquares); ++j){
+			  	arry[i][j] = false;
+					arry[i].push(true);
+				}
+			}
+
+			console.log(canvas.width, canvas.height, arry.length, arry[1].length)
+
+			canvas.addEventListener('mousedown', onClick);
+			canvas.addEventListener("mouseup", onRelease);
+			canvas.addEventListener("wheel", scroll)
+			canvas.addEventListener('mouseleave', onMouseLeave);
+			canvas.addEventListener('mousemove', onMouseMove);
+			document.addEventListener('keydown', (event) => {
+			  const keyName = event.key;
+				switch(keyName){
+					case 'Control':
+						return;/*
+					case 'm':
+						mousemode+=1;
+						if(mousemode>1){
+							mousemode=0;
+						}
+						return;*/
+					case 'Escape':
+
+						return;
+					case ' ':
+						pause = !pause;
+						return;
+				}
+			}, false);
+
+			function onClick(event){
+				click = true;
+			}
+
+			function onRelease(event){
+				click = false;
+			}
+
+			function onMouseMove(event){
+			  mouseX = event.pageX;
+			  mouseY = event.pageY;
+			}
+
+			function onMouseLeave(event){
+				click = false;
+			}
+
+			class Ember{
+				constructor(x, y, island){
+					this.x = x;
+					this.y = y;
+					this.xprecise = this.x;
+					this.yprecise =  this.y;
+					this.angle = Math.random()*2*Math.PI;
+					this.va = Math.random()/10-0.05;
+					this.speed = Math.random()/2;
+					this.heat = 100; //more heat more ember movement, whiter color
+					this.island = island;
+				}
+				calc(i){
+					arry[this.x][this.y] = false;
+					if(this.heat==0){
+						sugars.shift()
+					}
+
+					this.heat -= 1;
+					this.angle += this.va;
+					this.xprecise += Math.sin(this.angle)*this.speed;
+					this.yprecise += Math.cos(this.angle)*this.speed;
+					this.yprecise -= 0.005*(this.heat-50);
+					this.x = Math.round(this.xprecise);
+					this.y = Math.round(this.yprecise);
+					//console.log(this.x, this.y, this.xprecise, this.yprecise)
+					arry[this.x][this.y] = true;
+
+				}
+				draw(){
+					var trans = this.heat/50;
+					var g = 0;
+					var b = 0;
+					if(this.heat>25){
+						g = (this.heat-25)*255/50;
+					}
+					if(this.heat>75){
+						b = (this.heat-75)*255/25
+					}
+					ctx.fillStyle = "rgba(255, "+g+", "+b+", "+trans+")";
+
+					ctx.fillRect((this.x)*size-1+sugarborders, (this.y)*size-1+sugarborders, grainsizes, grainsizes);
+					// console.log("sugardrawn");
+				}
+			}
+			function makesugar(x, y, amt){
+				if(amt<=-1){
+				//console.log(mouseX, mouseY)
+					for(var i = 0; i < scrollnumber; i++){
+
+						if(20>x){
+							x = 20;
+						} else if(x>canvas.width-20) {
+							x = canvas.width-20;
+						}
+						if(20>y){
+							y = 20;
+						} else if(y>canvas.height-20) {
+							y = canvas.height-20;
+						}
+						sugr = new Ember(Math.round((x + Math.random()*size*4)/size)-2, Math.round((y + Math.random()*size*4)/size)-2, false);
+
+						if(!arry[sugr.x][sugr.y]==true){
+							arry[sugr.x][sugr.y] = true;
+							sugars.push(sugr);
+							if(sugars.length>maxsugars){
+								arry[sugars[0].x][sugars[0].y] = 0;
+								sugars.shift();
+							}
+						}
+					}
+				} else if(amt>=1){
+					if(sugars.length>0){
+						for(var i = 0; i < scrollnumber; i++){
+							arry[sugars[0].x][sugars[0].y] = 0;
+							sugars.shift();
+							if(sugars.length==0){
+								break;
+							}
+						}
+
+					}
+				}
+			}
+/*
+			function drawland(x, y, radius){
+				ex = Math.round(x/size);
+				why = Math.round(y/size);
+				for(var i = 0; i < sugars.length; i++){
+					if(Math.abs(sugars[i].x-ex)<radius && Math.abs(sugars[i].y-why)<radius){
+						sugars.splice(i,1);
+						i--;
+					}
+				}
+				for(var i = ex-radius; i < ex+radius; i++){
+					if(i<Math.round(canvas.width/size-1)&&i>0){
+						for(var j = why-radius; j < why+radius; j++){
+							if(j<Math.round(canvas.height/size-bottomsquares)&&j>0){
+								arry[i][j] = 1;
+								sugr = new Ember(i,j,true);
+								sugr.color = "purple"
+								sugars.push(sugr);
+							}
+						}
+					}
+				}
+			}*/
+			function fillscreen(){
+				ctx.fillStyle = canvascolor;
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				ctx.font = canvas.width / 30 + "px Arial";
+				ctx.fillStyle = '#7289DA';
+				strsugars = sugars.length.toString();
+				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 20);
+				if(pause){
+      		ctx.fillText("paused", 35*canvas.width/40, 11*canvas.height/12);
+				}
+				var modename;
+				ctx.font = canvas.width / 30 + "px Arial";
+				switch(mousemode){
+					case 0:
+						modename = "mode: sugar";
+						break;/*
+					case 1:
+						modename = "mode: draw";
+						break;*/
+				}
+				ctx.fillText(modename, canvas.width/54, canvas.height/10);
+				ctx.fillStyle = '#72C9CA';
+				ctx.font = canvas.width / 80 + "px Arial";
+				ctx.fillText("click and hold to do things.", canvas.width/50, 5.4*canvas.height/40);
+				ctx.fillText("press m to switch mouse modes.", canvas.width/50, 6.4*canvas.height/40);
+				ctx.fillText("press space to pause.", canvas.width/50, 7.4*canvas.height/40);
+				//ctx.fillText("use number keys to change zoom.", canvas.width/50, 8.4*canvas.height/40);
+			}
+		//	var intervalcounter = 0;
+			setInterval(function(){
+				//intervalcounter+=1
+				//console.log(mouseX,mouseY, click);
+				if(click){
+					switch(mousemode){
+						case 0:
+							//if(intervalcounter==5){
+							makesugar(mouseX,mouseY,-1);
+							//}
+							break;/*
+						case 1:
+							drawland(mouseX,mouseY,1);
+							break;*/
+					}
+				}
+				fillscreen()
+				for(var i = 0; i < sugars.length; i++){
+					sugars[i].draw();
+					if(!pause){
+						sugars[i].calc(i);
+					}
+				}
+			}, 20);
+
+			function scroll(event){
+				makesugar(event.clientX, event.clientY, event.deltaX + event.deltaY + event.deltaZ);
+			}
+
+
+			window.onresize = canvasResize;
+			function canvasResize() {
+			  canvas.width  = window.innerWidth;
+			  canvas.height = window.innerHeight;
+			  ctx.fillStyle = '#13171A';
+			  //ctx.fillStyle = canvascolor;
+			  ctx.fillRect(0, 0, canvas.width, canvas.height);
+			}
+
+		</script>
+	</body>
+</html>
