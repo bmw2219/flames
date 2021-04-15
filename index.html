@@ -7,6 +7,7 @@
 			var canvas = document.getElementById('screen');
 			var ctx = canvas.getContext('2d');
 			var sugars = [];
+			var woods = [];
 			var scrollnumber = 1;
 			var click = false
 			var mouseX = 0;
@@ -22,12 +23,12 @@
 			canvasResize();
 
 
-			var arry = Array(Math.round(canvas.width/size-1));
-			for(var i=0; i<Math.round(canvas.width/size-1); ++i) {
+			var arry = Array(Math.round(canvas.width/size));
+			for(var i=0; i<=Math.round(canvas.width/size); ++i) {
 			  arry[i] = Array(Math.round(canvas.height/size-bottomsquares));
-			  for(var j=0; j<Math.round(canvas.height/size-bottomsquares); ++j){
-			  	arry[i][j] = false;
-					arry[i].push(true);
+			  for(var j=0; j<=Math.round(canvas.height/size-bottomsquares); ++j){
+			  	arry[i][j] = 0;
+					arry[i].push(1);
 				}
 			}
 
@@ -42,13 +43,13 @@
 			  const keyName = event.key;
 				switch(keyName){
 					case 'Control':
-						return;/*
+						return;
 					case 'm':
 						mousemode+=1;
 						if(mousemode>1){
 							mousemode=0;
 						}
-						return;*/
+						return;
 					case 'Escape':
 
 						return;
@@ -76,7 +77,7 @@
 			}
 
 			class Ember{
-				constructor(x, y, island){
+				constructor(x, y){
 					this.x = x;
 					this.y = y;
 					this.xprecise = this.x;
@@ -85,23 +86,45 @@
 					this.va = Math.random()/10-0.05;
 					this.speed = Math.random()/2;
 					this.heat = 100; //more heat more ember movement, whiter color
-					this.island = island;
 				}
 				calc(i){
-					arry[this.x][this.y] = false;
+					arry[this.x][this.y] = 0;
 					if(this.heat==0){
 						sugars.shift()
+						return;
 					}
-
+					var touching = false;
+					var directions = [
+						[-1, 0], // left
+						[1, 0],  // right
+						[0, 1],   // down
+						[0, -1], // up
+					]
+					if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
+						sugars.splice(i,1);
+						return;
+					}
+					arry[this.x][this.y] = false;
+					for(var i=0; i<4; i++){
+						if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1){
+							touching = true;
+						}
+					}
 					this.heat -= 1;
-					this.angle += this.va;
-					this.xprecise += Math.sin(this.angle)*this.speed;
-					this.yprecise += Math.cos(this.angle)*this.speed;
-					this.yprecise -= 0.005*(this.heat-50);
-					this.x = Math.round(this.xprecise);
-					this.y = Math.round(this.yprecise);
+					if(!touching){
+						this.angle += this.va;
+						this.xprecise += Math.sin(this.angle)*this.speed;
+						this.yprecise += Math.cos(this.angle)*this.speed;
+						this.yprecise -= 0.005*(this.heat-50);
+						this.x = Math.round(this.xprecise);
+						this.y = Math.round(this.yprecise);
+					}
+					if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
+						sugars.splice(i,1);
+						return;
+					}
 					//console.log(this.x, this.y, this.xprecise, this.yprecise)
-					arry[this.x][this.y] = true;
+					arry[this.x][this.y] = 2;
 
 				}
 				draw(){
@@ -120,6 +143,39 @@
 					// console.log("sugardrawn");
 				}
 			}
+
+			class Wood{
+				constructor(x, y){
+					this.x = x;
+					this.y = y;
+					this.heat = 0;
+				}
+				calc(){
+					var touching = false;
+					var directions = [
+						[-1, 0], // left
+						[1, 0],  // right
+						[0, 1],   // down
+						[0, -1], // up
+					]
+					for(var i=0; i<4; i++){
+						if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==2){
+							this.heat+=0.1;
+							touching = true;
+						}
+					}
+					if(!touching){
+						this.heat-=this.heat/20
+					}
+					if(this.heat>10){
+						console.log("burning");
+					}
+				}
+				draw(){
+					ctx.fillStyle = "rgba("+(139+this.heat*12)+", "+(69+this.heat*10)+", "+(19+this.heat*8)+", 1)";
+					ctx.fillRect((this.x)*size-1+sugarborders, (this.y)*size-1+sugarborders, grainsizes, grainsizes);
+				}
+			}
 			function makesugar(x, y, amt){
 				if(amt<=-1){
 				//console.log(mouseX, mouseY)
@@ -135,10 +191,9 @@
 						} else if(y>canvas.height-20) {
 							y = canvas.height-20;
 						}
-						sugr = new Ember(Math.round((x + Math.random()*size*4)/size)-2, Math.round((y + Math.random()*size*4)/size)-2, false);
-
-						if(!arry[sugr.x][sugr.y]==true){
-							arry[sugr.x][sugr.y] = true;
+						sugr = new Ember(Math.round((x + Math.random()*size*4)/size)-2, Math.round((y + Math.random()*size*4)/size)-2);
+						if(arry[sugr.x][sugr.y]==0){
+							arry[sugr.x][sugr.y] = 2;
 							sugars.push(sugr);
 							if(sugars.length>maxsugars){
 								arry[sugars[0].x][sugars[0].y] = 0;
@@ -159,29 +214,29 @@
 					}
 				}
 			}
-/*
-			function drawland(x, y, radius){
+
+			function drawwood(x, y, radius){
 				ex = Math.round(x/size);
 				why = Math.round(y/size);
-				for(var i = 0; i < sugars.length; i++){
-					if(Math.abs(sugars[i].x-ex)<radius && Math.abs(sugars[i].y-why)<radius){
-						sugars.splice(i,1);
+				for(var i = 0; i < woods.length; i++){
+					if(Math.abs(woods[i].x-ex)<radius && Math.abs(woods[i].y-why)<radius){
+						woods.splice(i,1);
 						i--;
 					}
 				}
 				for(var i = ex-radius; i < ex+radius; i++){
-					if(i<Math.round(canvas.width/size-1)&&i>0){
+					if(i<Math.round(canvas.width/size)&&i>0){
 						for(var j = why-radius; j < why+radius; j++){
-							if(j<Math.round(canvas.height/size-bottomsquares)&&j>0){
+							if(j<Math.round(canvas.height/size)&&j>0){
 								arry[i][j] = 1;
-								sugr = new Ember(i,j,true);
+								sugr = new Wood(i,j);
 								sugr.color = "purple"
-								sugars.push(sugr);
+								woods.push(sugr);
 							}
 						}
 					}
 				}
-			}*/
+			}
 			function fillscreen(){
 				ctx.fillStyle = canvascolor;
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -196,11 +251,11 @@
 				ctx.font = canvas.width / 30 + "px Arial";
 				switch(mousemode){
 					case 0:
-						modename = "mode: sugar";
-						break;/*
+						modename = "mode: embers";
+						break;
 					case 1:
-						modename = "mode: draw";
-						break;*/
+						modename = "mode: wood";
+						break;
 				}
 				ctx.fillText(modename, canvas.width/54, canvas.height/10);
 				ctx.fillStyle = '#72C9CA';
@@ -220,13 +275,19 @@
 							//if(intervalcounter==5){
 							makesugar(mouseX,mouseY,-1);
 							//}
-							break;/*
+							break;
 						case 1:
-							drawland(mouseX,mouseY,1);
-							break;*/
+							drawwood(mouseX,mouseY,1);
+							break;
 					}
 				}
 				fillscreen()
+				for(var i = 0; i < woods.length; i++){
+					woods[i].draw();
+					if(!pause){
+						woods[i].calc(i);
+					}
+				}
 				for(var i = 0; i < sugars.length; i++){
 					sugars[i].draw();
 					if(!pause){
