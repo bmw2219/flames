@@ -100,7 +100,7 @@ class Slider {
     ctx.fillText(Math.round(this.value, this.roundPlaces), point+textOffset+containerX-7*this.containerWidth/8, (elementY+5*this.elementHeight/8)+this.containerWidth/14);
 
     ctx.font = canvas.width / 60 + "px Arial";
-    ctx.fillStyle = "rgba(255, 180, 80, 1)";
+    ctx.fillStyle = "rgba(255, 180, 80, 1)"; 
     ctx.fillText(this.name, -1*this.containerWidth/48+containerX-7*this.containerWidth/8, elementY+this.containerWidth/8);
   }
 }
