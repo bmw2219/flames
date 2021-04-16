@@ -21,8 +21,9 @@
 			var sugarborders = 0; //0 to 0.5
 			var grainsizes = size;
 			var bottomsquares = bottomspace/size;
-			var burntime = 4;
-			var flammability = 1;
+			var flammability = 0.01; //lower number higher flammability
+			var burntime = 1;
+
 			canvasResize();
 
 
@@ -107,32 +108,30 @@
 				calc(i){
 					if(this.heat<=0){
 						arry[this.x][this.y] = 0;
-						sugars.shift()
+						sugars.splice(i,1);
 						return;
 					}
-					this.heat -= 1;/*
-					if(this.stuck){
-						this.heat-=1;
-					}*/
-					if(!this.stuck){
-						//arry[this.x][this.y] = 0;
-						var directions = [
-							[-1, 0], // left
-							[1, 0],  // right
-							[0, 1],   // down
-							[0, -1], // up
-						]
-						if(this.x>=Math.round(canvas.width/size-1) || this.y>=Math.round(canvas.height/size-1) || this.x<=1 || this.y<=1){
-							arry[this.x][this.y] = 0;
-							sugars.splice(i,1);
+					this.heat -= 1;
+
+					var directions = [
+						[-1, 0], // left
+						[1, 0],  // right
+						[0, 1],   // down
+						[0, -1], // up
+					]
+					if(this.x>=Math.round(canvas.width/size-1) || this.y>=Math.round(canvas.height/size-1) || this.x<=1 || this.y<=1){
+						arry[this.x][this.y] = 0;
+						sugars.splice(i,1);
+						return;
+					}
+					this.stuck = false;
+					for(var i=0; i<4; i++){
+						if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1 || arry[this.x+directions[i][0]][this.y+directions[i][1]]==4){
+							this.stuck = true;
 							return;
 						}
-						for(var i=0; i<4; i++){
-							if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1){
-								this.stuck = true;
-								return;
-							}
-						}
+					}
+						if(!this.stuck){
 						arry[this.x][this.y] = 0;
 						this.angle += this.va;
 						this.xprecise += Math.sin(this.angle)*this.speed;
@@ -197,13 +196,15 @@
 						this.heat-=this.heat/30
 					}
 					if(this.heat>flammability){
-						this.onfire = 3;
-						var x = this.x;
-						var y = this.y;
-							var fir = new Fire(Math.round((x + Math.random()*3)-1.5), Math.round((y + Math.random()*3)-1.5));
-							if(arry[fir.x][fir.y]==0&&!(fir.x>=Math.round(canvas.width/size-1) || fir.y>=Math.round(canvas.height/size-1) || fir.x<=1 || fir.y<=1)){
-								arry[fir.x][fir.y] = 3;
-								fires.push(fir);
+						this.onfire = 4;
+						if(Math.random()*this.heat>0.4*flammability){
+							var x = this.x;
+							var y = this.y;
+								var fir = new Fire(Math.round((x + Math.random()*3)-1.5), Math.round((y + Math.random()*3)-1.5));
+								if(arry[fir.x][fir.y]==0&&!(fir.x>=Math.round(canvas.width/size-1) || fir.y>=Math.round(canvas.height/size-1) || fir.x<=1 || fir.y<=1)){
+									//arry[fir.x][fir.y] = 3;
+									fires.push(fir);
+							}
 						}
 					} else{
 						this.onfire = 1;
@@ -233,11 +234,17 @@
 						[1, -1]  // top right
 					]
 					var packed = 0;
-					arry[this.x][this.y] = 0;
+					arry[this.x][this.y] = 0;/*
 					for(var i=0; i<7; i++){
 						tests[i] = arry[this.x+directions[i][0]][this.y+directions[i][1]];
 						if(tests[i]){
 							packed+=1
+						}
+					}*/
+					for(var i=0; i<7; i++){
+						if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1||arry[this.x+directions[i][0]][this.y+directions[i][1]]==1){
+							tests[i]=true;
+							packed+=1;
 						}
 					}
 					if(packed>=6&&Math.random()<0.99){
@@ -294,7 +301,7 @@
 					if(this.island){
 						ctx.fillStyle = "purple";
 					} else{
-						ctx.fillStyle = "rgba("+(this.r+this.shade)+", "+(this.g+this.shade)+", "+(this.b+this.shade)+")";
+						ctx.fillStyle = "rgba("+(this.r+this.shade+this.heat)+", "+(this.g+this.shade-this.heat)+", "+(this.b+this.shade-this.heat)+")";
 					}
 					ctx.fillRect((this.x)*size-1+sugarborders, (this.y)*size-1+sugarborders, grainsizes, grainsizes);
 					// console.log("sugardrawn");
@@ -306,37 +313,47 @@
 					this.y = y;
 					this.precisey = y;
 					this.heat = 50+Math.random()*40;
-					this.increment = Math.random()*5;
+					this.increment = Math.random()*2+2;
+					this.lift = Math.random()*0.4+.2;
 				}
-				calc(){
+				calc(index){
+
 					if(this.heat<=0){
-						if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
-						fires.shift()
+						if(arry[this.x][this.y]==3){
+							arry[this.x][this.y] = 0;
+						}
+						fires.splice(index,1);
 						return;
 					}
-					if(Math.random()<-0.01){
+					if(Math.random()<0.01){
 						makesugar(this.x*6,this.y*6,-1, 1);
 					}
-					if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
-					var rand = Math.random();
-					if(rand<0.1){
-						if(this.x>1){
-							this.x-=1;
-						}
-					} else if(rand>0.9){
-						if(this.x<Math.round(canvas.width/size-1)){
-							this.x+=1;
-						}
+					if(arry[this.x][this.y]==3){
+						arry[this.x][this.y] = 0;
 					}
-					this.precisey-=0.4;
+					var rand = Math.random();
+					// if(rand<0.1){
+					// 	if(this.x>1){
+					// 		this.x-=1;
+					// 	}
+					// } else if(rand>0.9){
+					// 	if(this.x<Math.round(canvas.width/size-1)){
+					// 		this.x+=1;
+					// 	}
+					// }
+					//this.precisey-=this.lift;
 					this.heat-=this.increment;
 
 					this.y = Math.round(this.precisey);
-					if(arry[this.x][this.y]==0){arry[this.x][this.y] = 3;}
+					if(arry[this.x][this.y]==0){
+						arry[this.x][this.y] = 3;
+					}
 
 					if(this.x>=Math.round(canvas.width/size-1) || this.y>=Math.round(canvas.height/size-1) || this.x<=1 || this.y<=1){
-						if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
-						fires.splice(i,1);
+						if(arry[this.x][this.y]==3){
+							arry[this.x][this.y] = 0;
+						}
+						fires.splice(index,1);
 						return;
 					}
 				}
@@ -372,7 +389,7 @@
 						}
 						sugr = new Ember(Math.round((x + Math.random()*size*4)/size)-2, Math.round((y + Math.random()*size*4)/size)-2);
 						if(arry[sugr.x][sugr.y]==0){
-							arry[sugr.x][sugr.y] = 2;
+							//arry[sugr.x][sugr.y] = 2;
 							sugars.push(sugr);
 							if(sugars.length>maxsugars){
 								arry[sugars[0].x][sugars[0].y] = 0;
@@ -402,7 +419,7 @@
 					if(i<Math.round(canvas.width/size)&&i>0){
 						for(var j = why-radius; j < why+radius; j++){
 							if(j<Math.round(canvas.height/size)&&j>0){
-								if(arry[i][j] != 1){
+								if(arry[i][j] != 1 && arry[i][j] != 4){
 									arry[i][j] = 1;
 									sugr = new Wood(i,j);
 									sugr.color = "purple"
@@ -436,7 +453,7 @@
 						modename = "mode: embers";
 						break;
 					case 1:
-						modename = "mode: wood";
+						modename = "mode: sugar";
 						break;
 				}
 				ctx.fillText(modename, canvas.width/54, canvas.height/10);
