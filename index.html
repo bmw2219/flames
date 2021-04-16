@@ -87,9 +87,12 @@
 			//(name, value, minimum, maximum, containerWidth, updateFunc, container, checkUpdateFunc, roundPlaces)
 
 			function onClick(event){
-				click = true;
-				burnTimeSlider.clickEvent(event.clientX, event.clientY)
-				flammabilitySlider.clickEvent(event.clientX, event.clientY)
+				if(canvas.style.cursor == "pointer"){
+					burnTimeSlider.clickEvent(event.clientX, event.clientY)
+					flammabilitySlider.clickEvent(event.clientX, event.clientY)
+				}else{
+					click = true;
+				}
 			}
 
 			function onRelease(event){
