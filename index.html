@@ -64,7 +64,7 @@
 						return;
 					case 'm':
 						mousemode+=1;
-						if(mousemode>1){
+						if(mousemode>2){
 							mousemode=0;
 						}
 						return;
@@ -197,6 +197,7 @@
 					this.r = (205+shade+Math.random()*15);
 					this.g = (205+shade+Math.random()*15);
 					this.b = (205+shade+Math.random()*15);
+					this.texture = Math.random()*0.3+0.7
 				}
 				calc(index){
 					var touching = false;
@@ -323,7 +324,7 @@
 				}
 				draw(){
 					if(this.island){
-						ctx.fillStyle = "purple";
+						ctx.fillStyle = "rgba("+(139+this.heat*12)*this.texture+", "+(69+this.heat*10)*this.texture+", "+(19+this.heat*8)*this.texture+", 1)";
 					} else{
 						ctx.fillStyle = "rgba("+(this.r+this.shade+this.heat)+", "+(this.g+this.shade-this.heat)+", "+(this.b+this.shade-this.heat)+")";
 					}
@@ -435,7 +436,7 @@
 				}
 			}
 
-			function drawwood(x, y, radius){
+			function drawwood(x, y, radius, island){
 				ex = Math.round(x/size);
 				why = Math.round(y/size);
 
@@ -446,7 +447,7 @@
 								if(arry[i][j] != 1 && arry[i][j] != 4){
 									arry[i][j] = 1;
 									sugr = new Wood(i,j);
-									sugr.color = "purple"
+									sugr.island = island;
 									woods.push(sugr);
 								}
 							}
@@ -459,26 +460,27 @@
 				ctx.fillStyle = canvascolor;
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
 				ctx.font = canvas.width / 30 + "px Arial";
-				ctx.fillStyle = 'yellow';
+				ctx.fillStyle = "rgba(255, 245, 80, 1)";
 				strsugars = sugars.length.toString();
-				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 30);
+				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 28);
 				ctx.fillStyle = 'white';
 				strwoods = woods.length.toString();
-				ctx.fillText(woods.length, canvas.width - canvas.width*strwoods.length/54 - canvas.width/40, 2*canvas.width / 30);
-				ctx.fillStyle = 'orange';
+				ctx.fillText(woods.length, canvas.width - canvas.width*strwoods.length/54 - canvas.width/40, 2*canvas.width / 28);
+				ctx.fillStyle = "rgba(255, 180, 80, 1)";
 				strfires = fires.length.toString();
-				ctx.fillText(fires.length, canvas.width - canvas.width*strfires.length/54 - canvas.width/40, 3*canvas.width / 30);
+				ctx.fillText(fires.length, canvas.width - canvas.width*strfires.length/54 - canvas.width/40, 3*canvas.width / 28);
 
 				ctx.font = canvas.width / 60 + "px Arial";
-				ctx.fillStyle = 'yellow';
+				ctx.fillStyle = "rgba(255, 245, 80, 1)";
 				ctx.fillText("embers:", canvas.width - canvas.width*strsugars.length/54 - canvas.width/11, 1*canvas.width / 31);
 				ctx.fillStyle = 'white';
 				ctx.fillText("sugar:", canvas.width - canvas.width*strwoods.length/54 - canvas.width/13, 2*canvas.width / 31);
-				ctx.fillStyle = 'orange';
+				ctx.fillStyle = "rgba(255, 180, 80, 1)";
 				ctx.fillText("fire:", canvas.width - canvas.width*strfires.length/54 - canvas.width/17, 3*canvas.width / 31);
 
+				ctx.font = canvas.width / 30 + "px Arial";
 				if(pause){
-      		ctx.fillText("paused", 35*canvas.width/40, 11*canvas.height/12);
+      		ctx.fillText("paused", 35*canvas.width/40, 19*canvas.height/20);
 				}
 				var modename;
 				ctx.font = canvas.width / 30 + "px Arial";
@@ -489,16 +491,19 @@
 					case 1:
 						modename = "mode: sugar";
 						break;
+					case 2:
+						modename = "mode: wood";
+						break;
 				}
-				ctx.fillText(modename, canvas.width/54, canvas.height/10);
-				ctx.fillStyle = '#72C9CA';
+				ctx.fillText(modename, canvas.width/54, canvas.height/12);
+				ctx.fillStyle = "rgba(255, 245, 120, 1)";
 				ctx.font = canvas.width / 80 + "px Arial";
-				ctx.fillText("click and hold to do things.", canvas.width/50, 5.4*canvas.height/40);
-				ctx.fillText("press m to switch mouse modes.", canvas.width/50, 6.4*canvas.height/40);
-				ctx.fillText("press space to pause.", canvas.width/50, 7.4*canvas.height/40);
+				ctx.fillText("click and hold to do things.", canvas.width/40, 4.6*canvas.height/40);
+				ctx.fillText("press m to switch mouse modes.", canvas.width/40, 5.6*canvas.height/40);
+				ctx.fillText("press space to pause.", canvas.width/40, 6.6*canvas.height/40);
 				//ctx.fillText("use number keys to change zoom.", canvas.width/50, 8.4*canvas.height/40);
-				burnTimeSlider.draw(15*canvas.width/20, 0);
-				flammabilitySlider.draw(10*canvas.width/20, 0);
+				burnTimeSlider.draw(15*canvas.width/20, canvas.width/100);
+				flammabilitySlider.draw(10*canvas.width/20, canvas.width/100);
 
 			}
 		//	var intervalcounter = 0;
@@ -513,7 +518,10 @@
 							//}
 							break;
 						case 1:
-							drawwood(mouseX,mouseY,1);
+							drawwood(mouseX,mouseY,1, false);
+							break;
+						case 2:
+							drawwood(mouseX,mouseY,1, true);
 							break;
 					}
 				}

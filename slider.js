@@ -64,9 +64,9 @@ class Slider {
                       (containerX-49*this.containerWidth/50)+48*this.containerWidth/50,
                       elementY+this.elementHeight];
 
-    ctx.fillStyle = "rgba(19, 23, 26, 0.2)";
-    ctx.fillRect(containerX-24*this.containerWidth/25, elementY+this.containerWidth/50,
-      23*this.containerWidth/25, this.elementHeight-2*this.containerWidth/50);
+    // ctx.fillStyle = "rgba(19, 23, 26, 0.2)";
+    // ctx.fillRect(containerX-24*this.containerWidth/25, elementY+this.containerWidth/50,
+    //   23*this.containerWidth/25, this.elementHeight-2*this.containerWidth/50);
     if(this.value<=this.max && this.value>=this.min){
       var point = ((this.value-this.min)/this.range)*((3*this.containerWidth/4)+0);
     } else if(this.value<this.min){
@@ -75,13 +75,13 @@ class Slider {
       var point = ((this.max-this.min)/this.range)*((3*this.containerWidth/4)+0);
     }
     ctx.lineWidth = this.containerWidth/96;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
     ctx.lineJoin = 'round';
     ctx.beginPath();
     ctx.moveTo(containerX-7*this.containerWidth/8, elementY+5*this.elementHeight/8);
     ctx.lineTo(containerX-this.containerWidth/8, elementY+5*this.elementHeight/8);
     this.sliderLocationRange = [containerX-7*this.containerWidth/8, containerX-this.containerWidth/8];
-    ctx.fillStyle = 'rgba(50, 50, 50, 0.5)';
+    ctx.fillStyle = "rgba(255, 120, 120, 0.7)";
     ctx.fill();
     ctx.closePath();
     ctx.stroke();
@@ -95,12 +95,12 @@ class Slider {
     this.sliderPos = [containerX-7*this.containerWidth/8+point, elementY+5*this.elementHeight/8, this.containerWidth/48];
 
     ctx.font = canvas.width / 90 + "px Arial";
-    ctx.fillStyle = 'rgba(200, 200, 255, 0.5)';
+    ctx.fillStyle = "rgba(255, 180, 80, 1)";
     var textOffset = -1*ctx.measureText(Math.round(this.value, this.roundPlaces)).width/2;
     ctx.fillText(Math.round(this.value, this.roundPlaces), point+textOffset+containerX-7*this.containerWidth/8, (elementY+5*this.elementHeight/8)+this.containerWidth/14);
 
     ctx.font = canvas.width / 60 + "px Arial";
-    ctx.fillStyle = 'rgba(200, 200, 255, 0.5)';
+    ctx.fillStyle = "rgba(255, 180, 80, 1)";
     ctx.fillText(this.name, -1*this.containerWidth/48+containerX-7*this.containerWidth/8, elementY+this.containerWidth/8);
   }
 }
