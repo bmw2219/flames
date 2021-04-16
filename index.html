@@ -462,12 +462,21 @@
 				ctx.fillStyle = 'yellow';
 				strsugars = sugars.length.toString();
 				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 30);
-				ctx.fillStyle = 'brown';
+				ctx.fillStyle = 'white';
 				strwoods = woods.length.toString();
 				ctx.fillText(woods.length, canvas.width - canvas.width*strwoods.length/54 - canvas.width/40, 2*canvas.width / 30);
 				ctx.fillStyle = 'orange';
 				strfires = fires.length.toString();
 				ctx.fillText(fires.length, canvas.width - canvas.width*strfires.length/54 - canvas.width/40, 3*canvas.width / 30);
+
+				ctx.font = canvas.width / 60 + "px Arial";
+				ctx.fillStyle = 'yellow';
+				ctx.fillText("embers:", canvas.width - canvas.width*strsugars.length/54 - canvas.width/11, 1*canvas.width / 31);
+				ctx.fillStyle = 'white';
+				ctx.fillText("sugar:", canvas.width - canvas.width*strwoods.length/54 - canvas.width/13, 2*canvas.width / 31);
+				ctx.fillStyle = 'orange';
+				ctx.fillText("fire:", canvas.width - canvas.width*strfires.length/54 - canvas.width/17, 3*canvas.width / 31);
+
 				if(pause){
       		ctx.fillText("paused", 35*canvas.width/40, 11*canvas.height/12);
 				}
@@ -488,8 +497,8 @@
 				ctx.fillText("press m to switch mouse modes.", canvas.width/50, 6.4*canvas.height/40);
 				ctx.fillText("press space to pause.", canvas.width/50, 7.4*canvas.height/40);
 				//ctx.fillText("use number keys to change zoom.", canvas.width/50, 8.4*canvas.height/40);
-				burnTimeSlider.draw(16*canvas.width/20, 0);
-				flammabilitySlider.draw(11*canvas.width/20, 0);
+				burnTimeSlider.draw(15*canvas.width/20, 0);
+				flammabilitySlider.draw(10*canvas.width/20, 0);
 
 			}
 		//	var intervalcounter = 0;
