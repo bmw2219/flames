@@ -8,6 +8,7 @@
 			var ctx = canvas.getContext('2d');
 			var sugars = [];
 			var woods = [];
+			var fires = [];
 			var scrollnumber = 1;
 			var click = false
 			var mouseX = 0;
@@ -86,46 +87,53 @@
 					this.va = Math.random()/10-0.05;
 					this.speed = Math.random()/2;
 					this.heat = 100; //more heat more ember movement, whiter color
+					this.stuck = false;
 				}
 				calc(i){
-					arry[this.x][this.y] = 0;
-					if(this.heat==0){
+					if(this.heat<=0){
+						arry[this.x][this.y] = 0;
 						sugars.shift()
 						return;
 					}
-					var touching = false;
-					var directions = [
-						[-1, 0], // left
-						[1, 0],  // right
-						[0, 1],   // down
-						[0, -1], // up
-					]
-					if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
-						sugars.splice(i,1);
-						return;
-					}
-					arry[this.x][this.y] = false;
-					for(var i=0; i<4; i++){
-						if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1){
-							touching = true;
+					this.heat -= 1;/*
+					if(this.stuck){
+						this.heat-=1;
+					}*/
+					if(!this.stuck){
+						//arry[this.x][this.y] = 0;
+						var directions = [
+							[-1, 0], // left
+							[1, 0],  // right
+							[0, 1],   // down
+							[0, -1], // up
+						]
+						if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
+							arry[this.x][this.y] = 0;
+							sugars.splice(i,1);
+							return;
 						}
-					}
-					this.heat -= 1;
-					if(!touching){
+						for(var i=0; i<4; i++){
+							if(arry[this.x+directions[i][0]][this.y+directions[i][1]]==1){
+								this.stuck = true;
+								return;
+							}
+						}
+						arry[this.x][this.y] = 0;
 						this.angle += this.va;
 						this.xprecise += Math.sin(this.angle)*this.speed;
 						this.yprecise += Math.cos(this.angle)*this.speed;
 						this.yprecise -= 0.005*(this.heat-50);
 						this.x = Math.round(this.xprecise);
 						this.y = Math.round(this.yprecise);
-					}
-					if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
-						sugars.splice(i,1);
-						return;
-					}
-					//console.log(this.x, this.y, this.xprecise, this.yprecise)
-					arry[this.x][this.y] = 2;
 
+						if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
+							arry[this.x][this.y] = 0;
+							sugars.splice(i,1);
+							return;
+						}
+						//console.log(this.x, this.y, this.xprecise, this.yprecise)
+						arry[this.x][this.y] = 2;
+					}
 				}
 				draw(){
 					var trans = this.heat/50;
@@ -150,7 +158,7 @@
 					this.y = y;
 					this.heat = 0;
 				}
-				calc(){
+				calc(index){
 					var touching = false;
 					var directions = [
 						[-1, 0], // left
@@ -165,21 +173,87 @@
 						}
 					}
 					if(!touching){
-						this.heat-=this.heat/20
+						this.heat-=this.heat/30
 					}
-					if(this.heat>10){
-						console.log("burning");
+					if(this.heat>4){
+						var x = this.x;
+						var y = this.y;
+							var fir = new Fire(Math.round((x + Math.random()*3)-1.5), Math.round((y + Math.random()*3)-1.5));
+							if(arry[fir.x][fir.y]==0&&!(fir.x>=Math.round(canvas.width/size) || fir.y>=Math.round(canvas.height/size) || fir.x<=0 || fir.y<=0)){
+								//arry[fir.x][fir.y] = 2;
+								fires.push(fir);
+
+						}
 					}
+					if(this.heat>16){
+						arry[this.x][this.y] = 0;
+						woods.splice(index, 1);
+						return;
+					}
+					// if(this.heat>10){
+					// 	console.log("burning");
+					// }
 				}
 				draw(){
 					ctx.fillStyle = "rgba("+(139+this.heat*12)+", "+(69+this.heat*10)+", "+(19+this.heat*8)+", 1)";
 					ctx.fillRect((this.x)*size-1+sugarborders, (this.y)*size-1+sugarborders, grainsizes, grainsizes);
 				}
 			}
-			function makesugar(x, y, amt){
+			class Fire{
+				constructor(x, y){
+					this.x = x;
+					this.y = y;
+					this.precisey = y;
+					this.heat = 50+Math.random()*40;
+					this.increment = Math.random()*5;
+				}
+				calc(){
+					if(this.heat<=0){
+						if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
+						fires.shift()
+						return;
+					}
+					if(Math.random()<0.01){
+						makesugar(this.x*6,this.y*6,-1, 1);
+					}
+					if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
+					var rand = Math.random();
+					if(rand<0.1){
+						this.x-=1;
+					} else if(rand>0.9){
+						this.x+=1;
+					}
+					this.precisey-=0.4;
+					this.heat-=this.increment;
+
+					this.y = Math.round(this.precisey);
+					if(arry[this.x][this.y]==0){arry[this.x][this.y] = 3;}
+
+					if(this.x>=Math.round(canvas.width/size) || this.y>=Math.round(canvas.height/size) || this.x<=0 || this.y<=0){
+						if(arry[this.x][this.y]==3){arry[this.x][this.y] = 0;}
+						fires.splice(i,1);
+						return;
+					}
+				}
+				draw(){
+					var trans = this.heat/50;
+					var g = 0;
+					var b = 0;
+					if(this.heat>25){
+						g = (this.heat-25)*255/50;
+					}
+					if(this.heat>75){
+						b = (this.heat-75)*255/25
+					}
+					ctx.fillStyle = "rgba(255, "+g+", "+b+", "+trans+")";
+
+					ctx.fillRect((this.x)*size-1+sugarborders, (this.y)*size-1+sugarborders, grainsizes, grainsizes);
+				}
+			}
+			function makesugar(x, y, amt, num){
 				if(amt<=-1){
 				//console.log(mouseX, mouseY)
-					for(var i = 0; i < scrollnumber; i++){
+					for(var i = 0; i < num; i++){
 
 						if(20>x){
 							x = 20;
@@ -203,7 +277,7 @@
 					}
 				} else if(amt>=1){
 					if(sugars.length>0){
-						for(var i = 0; i < scrollnumber; i++){
+						for(var i = 0; i < num; i++){
 							arry[sugars[0].x][sugars[0].y] = 0;
 							sugars.shift();
 							if(sugars.length==0){
@@ -218,20 +292,17 @@
 			function drawwood(x, y, radius){
 				ex = Math.round(x/size);
 				why = Math.round(y/size);
-				for(var i = 0; i < woods.length; i++){
-					if(Math.abs(woods[i].x-ex)<radius && Math.abs(woods[i].y-why)<radius){
-						woods.splice(i,1);
-						i--;
-					}
-				}
+
 				for(var i = ex-radius; i < ex+radius; i++){
 					if(i<Math.round(canvas.width/size)&&i>0){
 						for(var j = why-radius; j < why+radius; j++){
 							if(j<Math.round(canvas.height/size)&&j>0){
-								arry[i][j] = 1;
-								sugr = new Wood(i,j);
-								sugr.color = "purple"
-								woods.push(sugr);
+								if(arry[i][j] != 1){
+									arry[i][j] = 1;
+									sugr = new Wood(i,j);
+									sugr.color = "purple"
+									woods.push(sugr);
+								}
 							}
 						}
 					}
@@ -241,9 +312,15 @@
 				ctx.fillStyle = canvascolor;
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
 				ctx.font = canvas.width / 30 + "px Arial";
-				ctx.fillStyle = '#7289DA';
+				ctx.fillStyle = 'yellow';
 				strsugars = sugars.length.toString();
-				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 20);
+				ctx.fillText(sugars.length, canvas.width - canvas.width*strsugars.length/54 - canvas.width/40, canvas.width / 30);
+				ctx.fillStyle = 'brown';
+				strwoods = woods.length.toString();
+				ctx.fillText(woods.length, canvas.width - canvas.width*strwoods.length/54 - canvas.width/40, 2*canvas.width / 30);
+				ctx.fillStyle = 'orange';
+				strfires = fires.length.toString();
+				ctx.fillText(fires.length, canvas.width - canvas.width*strfires.length/54 - canvas.width/40, 3*canvas.width / 30);
 				if(pause){
       		ctx.fillText("paused", 35*canvas.width/40, 11*canvas.height/12);
 				}
@@ -273,7 +350,7 @@
 					switch(mousemode){
 						case 0:
 							//if(intervalcounter==5){
-							makesugar(mouseX,mouseY,-1);
+							makesugar(mouseX,mouseY,-1, scrollnumber);
 							//}
 							break;
 						case 1:
@@ -291,13 +368,19 @@
 				for(var i = 0; i < sugars.length; i++){
 					sugars[i].draw();
 					if(!pause){
-						sugars[i].calc(i);
+						boop = sugars[i].calc(i);
+					}
+				}
+				for(var i = 0; i < fires.length; i++){
+					fires[i].draw();
+					if(!pause){
+						fires[i].calc(i);
 					}
 				}
 			}, 20);
 
 			function scroll(event){
-				makesugar(event.clientX, event.clientY, event.deltaX + event.deltaY + event.deltaZ);
+				makesugar(event.clientX, event.clientY, event.deltaX + event.deltaY + event.deltaZ, scrollnumber);
 			}
 
 
