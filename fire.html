@@ -414,7 +414,7 @@
 						}
 						sugr = new Ember(Math.round((x + Math.random()*size*4)/size)-2, Math.round((y + Math.random()*size*4)/size)-2);
 						if(arry[sugr.x][sugr.y]==0){
-							//arry[sugr.x][sugr.y] = 2;
+							arry[sugr.x][sugr.y] = 2;
 							sugars.push(sugr);
 							if(sugars.length>maxsugars){
 								arry[sugars[0].x][sugars[0].y] = 0;
